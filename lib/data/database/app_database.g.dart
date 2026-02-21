@@ -73,6 +73,40 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _verificationStatusMeta =
+      const VerificationMeta('verificationStatus');
+  @override
+  late final GeneratedColumn<String> verificationStatus =
+      GeneratedColumn<String>(
+        'verification_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('none'),
+      );
+  static const VerificationMeta _verifiedByMeta = const VerificationMeta(
+    'verifiedBy',
+  );
+  @override
+  late final GeneratedColumn<String> verifiedBy = GeneratedColumn<String>(
+    'verified_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _verifiedAtMeta = const VerificationMeta(
+    'verifiedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> verifiedAt = GeneratedColumn<DateTime>(
+    'verified_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -81,6 +115,9 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     imagePaths,
     createdAt,
     updatedAt,
+    verificationStatus,
+    verifiedBy,
+    verifiedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -134,6 +171,27 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('verification_status')) {
+      context.handle(
+        _verificationStatusMeta,
+        verificationStatus.isAcceptableOrUnknown(
+          data['verification_status']!,
+          _verificationStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('verified_by')) {
+      context.handle(
+        _verifiedByMeta,
+        verifiedBy.isAcceptableOrUnknown(data['verified_by']!, _verifiedByMeta),
+      );
+    }
+    if (data.containsKey('verified_at')) {
+      context.handle(
+        _verifiedAtMeta,
+        verifiedAt.isAcceptableOrUnknown(data['verified_at']!, _verifiedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -167,6 +225,18 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      verificationStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}verification_status'],
+      )!,
+      verifiedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}verified_by'],
+      ),
+      verifiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}verified_at'],
+      ),
     );
   }
 
@@ -183,6 +253,9 @@ class Note extends DataClass implements Insertable<Note> {
   final String? imagePaths;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String verificationStatus;
+  final String? verifiedBy;
+  final DateTime? verifiedAt;
   const Note({
     required this.id,
     required this.title,
@@ -190,6 +263,9 @@ class Note extends DataClass implements Insertable<Note> {
     this.imagePaths,
     required this.createdAt,
     required this.updatedAt,
+    required this.verificationStatus,
+    this.verifiedBy,
+    this.verifiedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -204,6 +280,13 @@ class Note extends DataClass implements Insertable<Note> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['verification_status'] = Variable<String>(verificationStatus);
+    if (!nullToAbsent || verifiedBy != null) {
+      map['verified_by'] = Variable<String>(verifiedBy);
+    }
+    if (!nullToAbsent || verifiedAt != null) {
+      map['verified_at'] = Variable<DateTime>(verifiedAt);
+    }
     return map;
   }
 
@@ -219,6 +302,13 @@ class Note extends DataClass implements Insertable<Note> {
           : Value(imagePaths),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      verificationStatus: Value(verificationStatus),
+      verifiedBy: verifiedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifiedBy),
+      verifiedAt: verifiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifiedAt),
     );
   }
 
@@ -234,6 +324,11 @@ class Note extends DataClass implements Insertable<Note> {
       imagePaths: serializer.fromJson<String?>(json['imagePaths']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      verificationStatus: serializer.fromJson<String>(
+        json['verificationStatus'],
+      ),
+      verifiedBy: serializer.fromJson<String?>(json['verifiedBy']),
+      verifiedAt: serializer.fromJson<DateTime?>(json['verifiedAt']),
     );
   }
   @override
@@ -246,6 +341,9 @@ class Note extends DataClass implements Insertable<Note> {
       'imagePaths': serializer.toJson<String?>(imagePaths),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'verificationStatus': serializer.toJson<String>(verificationStatus),
+      'verifiedBy': serializer.toJson<String?>(verifiedBy),
+      'verifiedAt': serializer.toJson<DateTime?>(verifiedAt),
     };
   }
 
@@ -256,6 +354,9 @@ class Note extends DataClass implements Insertable<Note> {
     Value<String?> imagePaths = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? verificationStatus,
+    Value<String?> verifiedBy = const Value.absent(),
+    Value<DateTime?> verifiedAt = const Value.absent(),
   }) => Note(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -263,6 +364,9 @@ class Note extends DataClass implements Insertable<Note> {
     imagePaths: imagePaths.present ? imagePaths.value : this.imagePaths,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    verificationStatus: verificationStatus ?? this.verificationStatus,
+    verifiedBy: verifiedBy.present ? verifiedBy.value : this.verifiedBy,
+    verifiedAt: verifiedAt.present ? verifiedAt.value : this.verifiedAt,
   );
   Note copyWithCompanion(NotesCompanion data) {
     return Note(
@@ -276,6 +380,15 @@ class Note extends DataClass implements Insertable<Note> {
           : this.imagePaths,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      verificationStatus: data.verificationStatus.present
+          ? data.verificationStatus.value
+          : this.verificationStatus,
+      verifiedBy: data.verifiedBy.present
+          ? data.verifiedBy.value
+          : this.verifiedBy,
+      verifiedAt: data.verifiedAt.present
+          ? data.verifiedAt.value
+          : this.verifiedAt,
     );
   }
 
@@ -287,14 +400,26 @@ class Note extends DataClass implements Insertable<Note> {
           ..write('description: $description, ')
           ..write('imagePaths: $imagePaths, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('verificationStatus: $verificationStatus, ')
+          ..write('verifiedBy: $verifiedBy, ')
+          ..write('verifiedAt: $verifiedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePaths, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePaths,
+    createdAt,
+    updatedAt,
+    verificationStatus,
+    verifiedBy,
+    verifiedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -304,7 +429,10 @@ class Note extends DataClass implements Insertable<Note> {
           other.description == this.description &&
           other.imagePaths == this.imagePaths &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.verificationStatus == this.verificationStatus &&
+          other.verifiedBy == this.verifiedBy &&
+          other.verifiedAt == this.verifiedAt);
 }
 
 class NotesCompanion extends UpdateCompanion<Note> {
@@ -314,6 +442,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
   final Value<String?> imagePaths;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<String> verificationStatus;
+  final Value<String?> verifiedBy;
+  final Value<DateTime?> verifiedAt;
   final Value<int> rowid;
   const NotesCompanion({
     this.id = const Value.absent(),
@@ -322,6 +453,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     this.imagePaths = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.verificationStatus = const Value.absent(),
+    this.verifiedBy = const Value.absent(),
+    this.verifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   NotesCompanion.insert({
@@ -331,6 +465,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     this.imagePaths = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.verificationStatus = const Value.absent(),
+    this.verifiedBy = const Value.absent(),
+    this.verifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title);
@@ -341,6 +478,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Expression<String>? imagePaths,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? verificationStatus,
+    Expression<String>? verifiedBy,
+    Expression<DateTime>? verifiedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -350,6 +490,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
       if (imagePaths != null) 'image_paths': imagePaths,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (verificationStatus != null) 'verification_status': verificationStatus,
+      if (verifiedBy != null) 'verified_by': verifiedBy,
+      if (verifiedAt != null) 'verified_at': verifiedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -361,6 +504,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Value<String?>? imagePaths,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<String>? verificationStatus,
+    Value<String?>? verifiedBy,
+    Value<DateTime?>? verifiedAt,
     Value<int>? rowid,
   }) {
     return NotesCompanion(
@@ -370,6 +516,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
       imagePaths: imagePaths ?? this.imagePaths,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      verifiedBy: verifiedBy ?? this.verifiedBy,
+      verifiedAt: verifiedAt ?? this.verifiedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -395,6 +544,15 @@ class NotesCompanion extends UpdateCompanion<Note> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (verificationStatus.present) {
+      map['verification_status'] = Variable<String>(verificationStatus.value);
+    }
+    if (verifiedBy.present) {
+      map['verified_by'] = Variable<String>(verifiedBy.value);
+    }
+    if (verifiedAt.present) {
+      map['verified_at'] = Variable<DateTime>(verifiedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -410,6 +568,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
           ..write('imagePaths: $imagePaths, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('verificationStatus: $verificationStatus, ')
+          ..write('verifiedBy: $verifiedBy, ')
+          ..write('verifiedAt: $verifiedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -435,6 +596,9 @@ typedef $$NotesTableCreateCompanionBuilder =
       Value<String?> imagePaths,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> verificationStatus,
+      Value<String?> verifiedBy,
+      Value<DateTime?> verifiedAt,
       Value<int> rowid,
     });
 typedef $$NotesTableUpdateCompanionBuilder =
@@ -445,6 +609,9 @@ typedef $$NotesTableUpdateCompanionBuilder =
       Value<String?> imagePaths,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<String> verificationStatus,
+      Value<String?> verifiedBy,
+      Value<DateTime?> verifiedAt,
       Value<int> rowid,
     });
 
@@ -483,6 +650,21 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get verificationStatus => $composableBuilder(
+    column: $table.verificationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get verifiedBy => $composableBuilder(
+    column: $table.verifiedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -525,6 +707,21 @@ class $$NotesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get verificationStatus => $composableBuilder(
+    column: $table.verificationStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get verifiedBy => $composableBuilder(
+    column: $table.verifiedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$NotesTableAnnotationComposer
@@ -557,6 +754,21 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get verificationStatus => $composableBuilder(
+    column: $table.verificationStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get verifiedBy => $composableBuilder(
+    column: $table.verifiedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get verifiedAt => $composableBuilder(
+    column: $table.verifiedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$NotesTableTableManager
@@ -593,6 +805,9 @@ class $$NotesTableTableManager
                 Value<String?> imagePaths = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> verificationStatus = const Value.absent(),
+                Value<String?> verifiedBy = const Value.absent(),
+                Value<DateTime?> verifiedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion(
                 id: id,
@@ -601,6 +816,9 @@ class $$NotesTableTableManager
                 imagePaths: imagePaths,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                verificationStatus: verificationStatus,
+                verifiedBy: verifiedBy,
+                verifiedAt: verifiedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -611,6 +829,9 @@ class $$NotesTableTableManager
                 Value<String?> imagePaths = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> verificationStatus = const Value.absent(),
+                Value<String?> verifiedBy = const Value.absent(),
+                Value<DateTime?> verifiedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion.insert(
                 id: id,
@@ -619,6 +840,9 @@ class $$NotesTableTableManager
                 imagePaths: imagePaths,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                verificationStatus: verificationStatus,
+                verifiedBy: verifiedBy,
+                verifiedAt: verifiedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

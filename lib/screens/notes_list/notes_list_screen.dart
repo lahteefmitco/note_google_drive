@@ -373,6 +373,49 @@ class _NotesListView extends StatelessWidget {
                                 color: Colors.white.withValues(alpha: 0.35),
                               ),
                             ),
+                            // Verification badge
+                            if (note.verificationStatus == 'verified') ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.verified,
+                                    size: 14,
+                                    color: Color(0xFF4CAF50),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Verified${note.verifiedBy != null ? ' by ${note.verifiedBy}' : ''}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF4CAF50),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ] else if (note.verificationStatus ==
+                                'pending') ...[
+                              const SizedBox(height: 8),
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 14,
+                                    color: Colors.orange,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Verification Pending',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),

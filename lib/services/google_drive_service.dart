@@ -29,8 +29,9 @@ class GoogleDriveService {
 
   /// The Web OAuth Client ID from Google Cloud Console.
   /// Required on Android for google_sign_in 7.x to exchange tokens.
-  static const String _serverClientId ="113187967910-p6dsqjskgh64qb7377tjghpujn6ramll.apps.googleusercontent.com";
-     // 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+  static const String _serverClientId =
+      "113187967910-p6dsqjskgh64qb7377tjghpujn6ramll.apps.googleusercontent.com";
+  // 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
 
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _initialized = false;
@@ -59,9 +60,7 @@ class GoogleDriveService {
       log('GoogleDriveService: Authorization granted');
 
       final accessToken = authorizationResult.accessToken;
-      log(
-        'GoogleDriveService: Got access token: ${accessToken != null ? "yes" : "null"}',
-      );
+      log('GoogleDriveService: Got access token');
 
       final headers = {'Authorization': 'Bearer $accessToken'};
 
@@ -120,6 +119,9 @@ class GoogleDriveService {
         'description': note.description,
         'createdAt': note.createdAt.toIso8601String(),
         'updatedAt': note.updatedAt.toIso8601String(),
+        'verificationStatus': note.verificationStatus,
+        'verifiedBy': note.verifiedBy,
+        'verifiedAt': note.verifiedAt?.toIso8601String(),
         'images': <String>[],
       };
 
@@ -281,6 +283,15 @@ class GoogleDriveService {
           ),
           createdAt: Value(DateTime.parse(jsonData['createdAt'] as String)),
           updatedAt: Value(DateTime.parse(jsonData['updatedAt'] as String)),
+          verificationStatus: Value(
+            (jsonData['verificationStatus'] as String?) ?? 'none',
+          ),
+          verifiedBy: Value(jsonData['verifiedBy'] as String?),
+          verifiedAt: Value(
+            jsonData['verifiedAt'] != null
+                ? DateTime.parse(jsonData['verifiedAt'] as String)
+                : null,
+          ),
         );
 
         await noteRepository.insertNote(noteCompanion);

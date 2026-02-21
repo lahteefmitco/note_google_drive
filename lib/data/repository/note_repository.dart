@@ -46,4 +46,19 @@ class NoteRepository {
       await insertNote(note);
     }
   }
+
+  Future<void> updateVerificationStatus({
+    required String noteId,
+    required String status,
+    String? verifiedBy,
+    DateTime? verifiedAt,
+  }) {
+    return (_db.update(_db.notes)..where((t) => t.id.equals(noteId))).write(
+      NotesCompanion(
+        verificationStatus: Value(status),
+        verifiedBy: Value(verifiedBy),
+        verifiedAt: Value(verifiedAt),
+      ),
+    );
+  }
 }

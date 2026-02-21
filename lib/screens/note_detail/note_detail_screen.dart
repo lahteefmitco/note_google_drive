@@ -7,6 +7,7 @@ import 'package:note_google_drive/data/database/app_database.dart';
 import 'package:note_google_drive/di/injection.dart';
 import 'package:note_google_drive/data/repository/note_repository.dart';
 import 'package:note_google_drive/services/encryption_service.dart';
+import 'package:note_google_drive/services/note_share_service.dart';
 import 'package:note_google_drive/screens/note_form/note_form_screen.dart';
 
 class NoteDetailScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class NoteDetailScreen extends StatefulWidget {
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late Note _note;
+  bool _isSharing = false;
 
   @override
   void initState() {
@@ -43,6 +45,112 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
   }
 
+  Future<void> _shareForVerification() async {
+    setState(() => _isSharing = true);
+    try {
+      await getIt<NoteShareService>().shareNoteForVerification(
+        note: _note,
+        encryptionService: getIt<EncryptionService>(),
+        noteRepository: getIt<NoteRepository>(),
+      );
+      await _refreshNote();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Note shared for verification'),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  Widget _buildVerificationBadge() {
+    final status = _note.verificationStatus;
+
+    if (status == 'verified') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.verified, color: Color(0xFF4CAF50), size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Verified',
+                    style: TextStyle(
+                      color: Color(0xFF4CAF50),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (_note.verifiedBy != null)
+                    Text(
+                      'By ${_note.verifiedBy}${_note.verifiedAt != null ? ' on ${DateFormat('MMM dd, yyyy').format(_note.verifiedAt!)}' : ''}',
+                      style: TextStyle(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (status == 'pending') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.schedule, color: Colors.orange, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Verification Pending',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     final imagePaths = _getImagePaths();
@@ -58,6 +166,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Share for verification button
+          IconButton(
+            icon: _isSharing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.share_outlined),
+            tooltip: 'Share for Verification',
+            onPressed: _isSharing ? null : _shareForVerification,
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit',
@@ -121,6 +244,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Verification badge
+            _buildVerificationBadge(),
+            if (_note.verificationStatus != 'none') const SizedBox(height: 16),
+
             // Title
             Text(
               _note.title,

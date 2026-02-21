@@ -3,6 +3,7 @@ import 'package:note_google_drive/data/database/app_database.dart';
 import 'package:note_google_drive/data/repository/note_repository.dart';
 import 'package:note_google_drive/services/encryption_service.dart';
 import 'package:note_google_drive/services/google_drive_service.dart';
+import 'package:note_google_drive/services/note_share_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -18,4 +19,5 @@ void setupDependencies() {
   // Services
   getIt.registerLazySingleton<EncryptionService>(() => EncryptionService());
   getIt.registerLazySingleton<GoogleDriveService>(() => GoogleDriveService());
+  getIt.registerLazySingleton<NoteShareService>(() => NoteShareService());
 }
